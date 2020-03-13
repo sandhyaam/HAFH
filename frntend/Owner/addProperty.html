@@ -1,0 +1,145 @@
+<html>
+
+<head>
+    <title>Add Property Details</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+
+</head>
+
+<body class="container">
+    <div style="text-align: center;color: #34495E">
+        <h1>Add Property Details</h1>
+    </div><br><br>
+    <input type="hidden" name="id" id="id" class="form-control" required>
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-3"></div>
+        <div class="col-sm-2"><label>PropertyName:</label></div>
+        <div class="col-sm-3"><input type="text" id="property" placeholder="Property" class="form-control"></div>
+        <div class="col-sm-4">
+        </div><br>
+    </div>
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2"><label>Type of House:</label></div>
+        <div class="col-sm-3"><input type="text" id="typeOfHouse" placeholder="typeOfHouse" class="form-control"></div>
+        <div class="col-sm-2"><label>House No:</label></div>
+        <div class="col-sm-3"><input type="text" id="houseNo" placeholder="houseNo" class="form-control"></div>
+        <div class="col-sm-1"></div>
+    </div><br>
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2"><label>Room Type:</label></div>
+        <div class="col-sm-3"><input type="text" id="roomType" placeholder="roomType" class="form-control"></div>
+        <div class="col-sm-2"><label>Amount</label></div>
+        <div class="col-sm-3"><input type="text" id="amount" placeholder="amount" class="form-control"></div>
+        <div class="col-sm-1"></div>
+    </div><br>
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2"><label>Description</label></div>
+        <div class="col-sm-3"><input type="text" id="description" placeholder="description"
+                class="form-control"></textarea></div>
+
+        <div class="col-sm-2"><label>Location</label></div>
+        <div class="col-sm-3"><input type="text" id="location" placeholder="location" class="form-control"></div>
+        <div class="col-sm-1"></div>
+    </div><br>
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2"><label>Address</label></div>
+        <div class="col-sm-3"><textarea name="text" id="address" placeholder="address" class="form-control"></textarea>
+        </div>
+        <div class="col-sm-2"><label>Image</label></div>
+        <div class="col-sm-3"><input type="file" id="file"></div>
+        <div class="col-sm-1"></div>
+    </div><br>
+    <div class="row">
+        <div class="col-sm-5"></div>
+        <div class="col-sm-1"><input type="button" id="btnadd" onclick="AddProperty()" class="btn btn-success"
+                value="Add" /></div>&nbsp;
+        <div class="col-sm-1"><button type="button" id="cancel" style="display: none" onclick="cancel()"
+                class="btn btn-success">Reset</button></div>
+        <div class="col-sm-5"></div>
+    </div><br>
+</body>
+
+
+<script>
+    const ownerid = sessionStorage.getItem("ownerid");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+
+                    resolve(this.responseText);
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+
+    function AddProperty() {
+        const id = document.getElementById("id").value;
+        const propertyName = document.getElementById("property").value;
+        const typeOfHouse = document.getElementById("typeOfHouse").value;
+        const houseNo = document.getElementById("houseNo").value;
+        const roomType = document.getElementById("roomType").value;
+        const amount = document.getElementById("amount").value;
+        const description = document.getElementById("description").value;
+        const location = document.getElementById("location").value;
+        const address = document.getElementById("address").value;
+        const image = document.getElementById("file").files;
+        const status = '0';
+        if (image.length > 0) {
+            var fileToLoad = image[0];
+            var fileReader = new FileReader();
+            fileReader.onload = function (fileLoadedEvent) {
+                const filepath = fileLoadedEvent.target.result;
+                const getSendFilePromise = performAjax(
+                    "POST",
+                    `http://localhost:1234/Owner/addProperty`,
+                    JSON.stringify({ owner: ownerid, propertyName, typeOfHouse, houseNo, roomType, amount, description, location, address, image: filepath, status })
+                );
+                getSendFilePromise
+                    .then((sendFilePromise) => {
+                        alert('Property Added Successfully');
+                        cancel();
+                    })
+                    .catch(err => {
+                        alert(err.message);
+                    })
+            }
+            fileReader.readAsDataURL(fileToLoad);
+        }
+    }
+
+    function cancel() {
+        event.preventDefault();
+        document.getElementById("property").value = "";
+        document.getElementById("typeOfHouse").value = "";
+        document.getElementById("houseNo").value = "";
+        document.getElementById("roomType").value = "";
+        document.getElementById("amount").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("location").value = "";
+        document.getElementById("address").value = "";
+        document.getElementById("file").value = "";
+    }
+</script>
+
+</html>

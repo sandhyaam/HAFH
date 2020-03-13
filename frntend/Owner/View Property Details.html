@@ -1,0 +1,267 @@
+<html>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<style>
+    .tablecss {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .tablecss td,
+    .tablecss th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    .tablecss tr:nth-child(odd) {
+        background-color: #f2f2f2;
+    }
+
+    .tablecss tr:hover {
+        background-color: #ddd;
+    }
+
+    .tablecss th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: center;
+        background-color: lavender;
+        color: black;
+        font-weight: bold;
+    }
+</style>
+
+<body onload="loadData()">
+    <center>
+        <table id="table" class="tablecss" style="width:95%;"></table>
+    </center>
+    <div class="container">
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Property Details</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="id" class="form-control" required>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-2"><label>PropertyName:</label></div>
+                            <div class="col-sm-3"><input type="text" id="property" placeholder="Property"
+                                    class="form-control"></div>
+                            <div class="col-sm-4">
+                            </div><br>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="col-sm-2"><label>
+                                    <Table>Type of House:</Table>
+                                </label></div>
+                            <div class="col-sm-3"><input type="text" id="typeOfHouse" placeholder="typeOfHouse"
+                                    class="form-control"></div>
+                            <div class="col-sm-2"><label>House No:</label></div>
+                            <div class="col-sm-3"><input type="text" id="houseNo" placeholder="houseNo"
+                                    class="form-control"></div>
+                            <div class="col-sm-1"></div>
+                        </div><br>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="col-sm-2"><label>Room Type:</label></div>
+                            <div class="col-sm-3"><input type="text" id="roomType" placeholder="roomType"
+                                    class="form-control"></div>
+                            <div class="col-sm-2"><label>Amount</label></div>
+                            <div class="col-sm-3"><input type="text" id="amount" placeholder="amount"
+                                    class="form-control"></div>
+                            <div class="col-sm-1"></div>
+                        </div><br>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="col-sm-2"><label>Description</label></div>
+                            <div class="col-sm-3"><input type="text" id="description" placeholder="description"
+                                    class="form-control"></textarea></div>
+
+                            <div class="col-sm-2"><label>Location</label></div>
+                            <div class="col-sm-3"><input type="text" id="location" placeholder="location"
+                                    class="form-control"></div>
+                            <div class="col-sm-1"></div>
+                        </div><br>
+                        <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="col-sm-2"><label>Address</label></div>
+                            <div class="col-sm-3"><textarea name="text" id="address" placeholder="address"
+                                    class="form-control"></textarea></div>
+                            <div class="col-sm-1"><label>Image</label></div>
+                            <div class="col-sm-1"><img src="" id="image" alt="Smiley face" height="42" width="42">
+                            </div>
+                            <div class="col-sm-4"><input type="file" id="file" required></div>
+                        </div><br>
+                        <div class="row">
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-4"><input type="button" id="btnadd" onclick="PropertyUpdate(event)"
+                                    data-dismiss="modal" class="btn btn-success" value="Update" /></div>&nbsp;
+                            <div class="col-sm-4"></div>
+                        </div><br>
+                    </div><br>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+<script>
+    let propertys = [];
+    const ownerid = sessionStorage.getItem("ownerid");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    resolve(JSON.parse(this.responseText));
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+
+    function loadData() {
+        const getPromise = performAjax("GET", `http://localhost:1234/Owner/getPropertyData?owner=${ownerid}`);
+        getPromise
+            .then((ownersList) => {
+                loadPropertyData(ownersList);
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+
+    function loadPropertyData(records) {
+        const tableHeader = `<tr><th style="text-align:center">Sno</th><th style="height:20%;text-align:center">TypeOfHouse</th><th style="height:20%;text-align:center">HouseNo</th><th style="height:20%;text-align:center">RoomType</th><th style="height:20%;text-align:center">Amount</th><th style="height:20%;text-align:center">Description</th><th style="height:20%;text-align:center">Location</th><th style="height:20%;text-align:center">Address</th><th style="height:20%;text-align:center">Image</th><th>Actions</th></tr>`;
+        if (records.length > 0) {
+            let tableRows = records.map((property, index) => {
+                let editButton = `<a class="fa fa-edit" id="${property._id}"   style="color:blue; font-size:22px;" onclick="edit(event)" data-toggle="modal" data-target="#myModal"></a>`;
+                let deleteButton = `<a id="${property.id}" class="fa fa-trash" style="color:blue; font-size:22px;" onclick="deleteFile(event)"></a>`;
+                return `<tr><td>${index + 1}</td><td>${property.typeOfHouse}</td><td>${property.houseNo}</td><td>${property.roomType}</td><td>${property.amount}</td><td>${property.description}</td><td>${property.location}</td><td>${property.address}</td><td><img src="${property.image}" height="30" width="50"></td><td align="center">${editButton}&nbsp;&nbsp;&nbsp;${deleteButton}</td></tr>`;
+            });
+            document.getElementById("table").innerHTML = `<table  border="2"> ${tableHeader}${tableRows.join('')}</table>`;
+        }
+
+        else {
+            tableRows = `<tr><td colspan="18" align="center">No Data Found</td></tr>`;
+            document.getElementById("table").innerHTML = `${tableHeader}${tableRows}`;
+        }
+    }
+
+
+    function edit(event) {
+        event.preventDefault();
+        const getPromise = performAjax("GET", `http://localhost:1234/Owner/editProperty/${event.target.id}`);
+        getPromise
+            .then((data) => {
+                const property = JSON.parse(JSON.stringify(data));
+                [property].map(rec => {
+                    document.getElementById("id").value = rec._id;
+                    document.getElementById("property").value = rec.propertyName
+                    sessionStorage.setItem("property", rec.propertyName);
+                    document.getElementById("typeOfHouse").value = rec.typeOfHouse;
+                    document.getElementById("houseNo").value = rec.houseNo;
+                    document.getElementById("roomType").value = rec.roomType;
+                    document.getElementById("amount").value = rec.amount;
+                    document.getElementById("description").value = rec.description;
+                    document.getElementById("location").value = rec.location;
+                    document.getElementById("address").value = rec.address;
+                    document.getElementById("image").src = rec.image;
+
+                })
+
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+
+    function PropertyUpdate() {
+        const id = document.getElementById("id").value;
+        const propertyName = document.getElementById("property").value;
+        const typeOfHouse = document.getElementById("typeOfHouse").value;
+        const houseNo = document.getElementById("houseNo").value;
+        const roomType = document.getElementById("roomType").value;
+        const amount = document.getElementById("amount").value;
+        const description = document.getElementById("description").value;
+        const location = document.getElementById("location").value;
+        const address = document.getElementById("address").value;
+        const image = document.getElementById("file").files;
+        if (image.length > 0) {
+            var imageToLoad = image[0];
+            var imageReader = new FileReader();
+            imageReader.onload = function (fileLoadedEvent) {
+                const filepath = fileLoadedEvent.target.result;
+                const getSendFilePromise = performAjax(
+                    "PUT",
+                    `http://localhost:1234/Owner/updateProperty/${id}`,
+                    JSON.stringify({ typeOfHouse, houseNo, roomType, amount, description, location, address, image: filepath }));
+                getSendFilePromise
+                    .then((sendFilePromise) => {
+                        loadData(sendFilePromise);
+                        alert('Updated Successfully');
+
+                    })
+                    .catch(err => {
+                        alert(err.message);
+                    })
+            }
+            imageReader.readAsDataURL(imageToLoad);
+        }
+        else {
+            const getPromise = performAjax(
+                "PUT",
+                `http://localhost:1234/Owner/updateProperty/${id}`,
+                JSON.stringify({ typeOfHouse, houseNo, roomType, amount, description, location, address })
+            );
+            getPromise
+                .then((UniPromise) => {
+                    loadData(UniPromise);
+                    alert('Update Successfully Completed');
+
+                })
+                .catch(err => {
+                    alert(err.message);
+                })
+        }
+    }
+
+
+    function deleteFile(event) {
+        event.preventDefault();
+        const deletePromise = performAjax("DELETE", `http://localhost:1234/Owner/deleleProperty/${event.target.id}`);
+        deletePromise
+            .then((remaininglist) => {
+                loadData();
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+
+</script>
+
+</html>

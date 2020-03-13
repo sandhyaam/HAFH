@@ -1,0 +1,128 @@
+<html>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    .tablecss {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .tablecss td,
+    .tablecss th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    .tablecss tr:nth-child(odd) {
+        background-color: #f2f2f2;
+    }
+
+    .tablecss tr:hover {
+        background-color: #ddd;
+    }
+
+    .tablecss th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: center;
+        background-color: lavender;
+        color: black;
+        font-weight: bold;
+    }
+
+    .button2 {
+        background-color: white;
+        color: black;
+        border: 2px solid #008CBA;
+    }
+
+    .button2:hover {
+        background-color: #008CBA;
+        color: white;
+    }
+</style>
+
+<body onload="loadData()">
+    <center>
+        <table id="table" class="tablecss" style="width:95%;"></table>
+    </center>
+    <input type="hidden" name="id" id="id" class="form-control" required>
+</body>
+
+<script>
+    const ownerid = sessionStorage.getItem("ownerid");
+    const ownerEmail = sessionStorage.getItem("email");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    resolve(JSON.parse(this.responseText));
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+
+    function loadData() {
+        const getPromise = performAjax("GET", `http://localhost:1234/Owner/paymentDetails?owner=${ownerid}`);
+        getPromise
+            .then((propertyList) => {
+                loadbookingData(propertyList);
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+    function loadbookingData(records) {
+        const tableHeader = `<tr><th style="text-align:center">Sno</th><th style="height:20%;text-align:center">Owner</th><th style="height:20%;text-align:center">Property Name</th><th style="height:20%;text-align:center">Renter</th><th style="height:20%;text-align:center">HouseNo</th><th style="height:20%;text-align:center">RoomType</th><th style="height:20%;text-align:center">Amount</th><th style="height:20%;text-align:center">Status</th><th style="height:20%;text-align:center">histiorty</th></tr>`;
+        if (records.length > 0) {
+            let tableRows = records.map((booking, index) => {
+                let RoomVacate = `<button class="button button2"  onclick="roomVacate('${booking.id}','${booking.ownerId}','${booking.renterId}','${booking.propertyId}')"   data-target="paymentamount">RoomVacate</button>`;
+                return `<tr><td>${index + 1}</td><td>${booking.owner}</td><td>${booking.property}</td><td>${booking.renter}</td><td>${booking.houseNo}</td><td>${booking.roomType}</td><td>${booking.amount}</td><td>${booking.status}</td><td align="center">${RoomVacate}</td></tr>`;
+            });
+            document.getElementById("table").innerHTML = `<table  border="2"> ${tableHeader}${tableRows.join('')}</table>`;
+        }
+
+        else {
+            tableRows = `<tr><td colspan="18" align="center">No Data Found</td></tr>`;
+            document.getElementById("table").innerHTML = `${tableHeader}${tableRows}`;
+        }
+    }
+
+
+
+
+    function roomVacate(bookingId, ownerId, renterId, propertyId) {
+        const status = "1";
+        const getUpdatePromise = performAjax(
+            "PUT",
+            `http://localhost:1234/Owner/roomVacate/`,
+            JSON.stringify({ bookingId, ownerId, renterId, propertyId, status, ownerEmail })
+        );
+        getUpdatePromise
+            .then((updatePromise) => {
+                alert('Room vacated');
+                loadData(updatePromise);
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+
+
+</script>
+
+</html>

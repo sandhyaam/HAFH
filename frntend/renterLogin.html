@@ -1,0 +1,105 @@
+<html>
+
+<head>
+    <title>Home Away From Home</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <style>
+        h2 {
+            padding: 5px;
+            font-family: 'Times New Roman', Times, serif;
+            text-align: center;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container" style="border: none"><br>
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-6">
+                <h2>RENTER LOGIN</h2>
+            </div>
+            <div class="col-sm-3"></div>
+        </div><br>
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-2">
+                <label style="margin-top: 8px">UserName:</label></div>
+            <div class="col-sm-3">
+                <input type="text" placeholder="Name" id="userName" class="form-control"></div>
+            <div class="col-sm-4"></div>
+        </div><br>
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-2"><label style="margin-top: 8px">Password:</label></div>
+            <div class="col-sm-3">
+                <input type="password" placeholder="password" id="password" class="form-control"></div>
+            <div class="col-sm-4"></div>
+        </div><br><br>
+        <center><button type="button" onclick="Renterlogin()" class="btn btn-primary" data-dismiss="modal">submit</button><br><br><br>
+        </center>
+        <div class="row">
+            <div class="col-sm-7"></div>
+            <div class="col-sm-5"><a href="http://localhost:3000/renterRegistration">New Registration!</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://localhost:3000/renterforgetpwd">
+                forgot password!</a></div>
+        </div>
+</body>
+<script>
+        function performAjax(httpMethod, url, params) {
+            const myPromise = new Promise((resolve, reject) => {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+    
+                        resolve(this.responseText);
+                    }
+                    if (this.status == 500) {
+                        reject({ error: true, message: "ServerError" });
+                    }
+                    if (this.status == 404) {
+                        reject({ error: true, message: "Resource not found" });
+                    }
+                };
+                xhttp.open(httpMethod, url, true);
+                xhttp.setRequestHeader("Content-Type", "application/json");
+                params ? xhttp.send(params) : xhttp.send();
+            });
+            return myPromise;
+        }
+    
+        function Renterlogin() {
+            const userName = document.getElementById("userName").value;
+            const password = document.getElementById("password").value;
+            const getLoginPromise = performAjax(
+                "GET",
+                `http://localhost:1234/Renter/renterlogin?userName=${userName}&password=${password}`
+            );
+            getLoginPromise
+                .then((loginPromise) => {
+                    if (loginPromise == "" || loginPromise == null) {
+                        alert('Login Faild');
+                    }
+                    else {
+                        const data = JSON.parse(loginPromise);
+                        const renters = [data].map(record => {
+                            return record;
+                        });
+                        renters.map(login => {
+                            sessionStorage.setItem("renterid", login._id);
+                            sessionStorage.setItem("renteremail", login.email);
+                            sessionStorage.setItem("userName", login.userName);
+                            window.top.location.href = "renterpage";
+                           
+                        });
+                    }
+                })
+                .catch(err => {
+                    alert(err.message);
+                })
+        }
+        </script>
+</html>

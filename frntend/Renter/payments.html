@@ -1,0 +1,182 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <title>payments page</title>
+    <style>
+        .header {
+            text-align: center;
+            background-color: #F8F9F9;
+            color: #2E4053;
+            border-bottom: 1px solid #CCD1D1;
+        }
+
+        button {
+            width: 100%;
+        }
+    </style>
+    <script>
+
+
+    </script>
+</head>
+
+<body onload="getPropertyDetails()" class="container">
+    <div class="row">
+        <div class="col-sm-4"></div>
+        <div class="col-sm-4">
+            <div class="header">
+                <h1>Payment</h1>
+            </div><br>
+            <input type="hidden" id="id">
+            <div class="row">
+                <div class="col-sm-6">
+                    <label>HNo:</label>
+                    <input type="text" disabled="false" id="houseNo" placeholder="H No" class="form-control">
+                </div>
+                <div class="col-sm-6">
+                    <label>RoomType:</label>
+                    <input type="text" disabled="false" id="roomType" placeholder="roomType" class="form-control">
+                </div>
+            </div><br>
+            <div class="row">
+                <div class="col col-sm-6">
+                    <label>Amount</label>
+                    <input id="amount" disabled="false" placeholder="amount" class="form-control">
+                </div>
+                <div class="col col-sm-6">
+                    <label> Address</label>
+                    <input id="address" disabled="false" class="form-control">
+                </div>
+            </div><br><br>
+            <div class="row">
+
+                <div class="col-sm-6"><strong>CardType</strong></div>
+                <div class="col-sm-6"> <input type="radio" name="cardtype" id="debit" value="Debit">Debit &nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="cardtype" id="credit" value="Credit">Credit</div>
+
+            </div><br>
+            <div class="row">
+                <div class="col col-sm-6">
+                    <h6>Holder Name</h6>
+                    <input id="cardHolderName" class="form-control">
+                </div>
+
+                <div class="col col-sm-6">
+                    <h6>Card No.</h6>
+
+                    <input id="cardNo" class="form-control" placeholder="xxxx xxxx xxxx">
+                </div>
+            </div><br>
+            <div class="row">
+                <div class="col col-sm-6">
+                    <h6>Expire Date</h6>
+                </div>
+                <div class="col col-sm-6">
+                    <h6>CVV</h6>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col col-sm-6"><input id="date" class="form-control" placeholder="MM/YY"></div>
+                <div class="col col-sm-6"><input id="cvv" class="form-control" placeholder="xxx"></div>
+            </div><br>
+            <div class="row">
+                <div class="col-sm-12"><input type="hidden" disabled="false" id="month" placeholder=""
+                        class="form-control"></div>
+            </div><br>
+            <div class="row">
+                <div class="col col-sm-12"><button onclick="Payment()" class="btn btn-primary">continue</button></div>
+            </div><br>
+        </div><br>
+        <div class="col-sm-4"></div>
+    </div>
+</body>
+<script>
+
+    const houseNo = sessionStorage.getItem("houseNo");
+    const roomType = sessionStorage.getItem("roomType");
+    const amount = sessionStorage.getItem("amount");
+    const address = sessionStorage.getItem("address");
+    const renterid = sessionStorage.getItem("renterid");
+    const propertyid = sessionStorage.getItem("propertyid");
+    console.log(propertyid);
+    const ownerid = sessionStorage.getItem("owner");
+    const renterEmail = sessionStorage.getItem("renteremail");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+
+                    resolve(this.responseText);
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+
+
+
+    function getPropertyDetails() {
+        document.getElementById("houseNo").value = houseNo;
+        document.getElementById("roomType").value = roomType;
+        document.getElementById("amount").value = amount;
+        document.getElementById("address").value = address;
+        var today = new Date();
+        var mm = String(today.getMonth() + 1).slice(-2);
+        var yyyy = today.getFullYear();
+        today = mm + '/' + yyyy;
+        document.getElementById("month").value = today;
+    }
+
+    function Payment() {
+        const id = document.getElementById("id").value;
+        const houseNo = document.getElementById("houseNo").value;
+        const roomType = document.getElementById("roomType").value;
+        const amount = document.getElementById("amount").value;
+        const address = document.getElementById("address").value;
+        const cardtype = document.getElementById("credit").checked == true ? "Credit" : "Debit";
+        const cardHolderName = document.getElementById("cardHolderName").value;
+        const cardNo = document.getElementById("cardNo").value;
+        const cvv = document.getElementById("cvv").value;
+        const date = document.getElementById("date").value;
+        const month = document.getElementById("month").value;
+        const status = '0';
+        const addPromise = performAjax(
+            "POST", "http://localhost:1234/Renter/addpayment",
+            JSON.stringify({ owner: ownerid, property: propertyid, renter: renterid, houseNo, roomType, amount, address, cardtype, cardHolderName, cardNo, cvv, date, month, renterEmail, status })
+        );
+        addPromise
+            .then(newList => {
+                alert("payment Succefully");
+                cancel();
+
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+
+    }
+    function cancel() {
+        document.getElementById("credit").checked = "";
+        document.getElementById("cardHolderName").value = "";
+        document.getElementById("cardNo").value = "";
+        document.getElementById("cvv").value = "";
+        document.getElementById("date").value = "";
+        document.getElementById("month").value = "";
+    }
+</script>
+
+</html>

@@ -1,0 +1,136 @@
+<html>
+
+<head>
+    <title>Search Property Details</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+
+</head>
+
+<style>
+    .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .card {
+        width: 150px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        text-align: center;
+        background-color: #f1f1f1;
+    }
+
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .container {
+        width: 700px;
+        margin: 0 auto;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="col-sm-3"><input type="text" id="search" placeholder="Enter location" class="form-control">
+            </div>
+            <div class="col-sm-4"><button type="submit" onclick="SearchDetails()"
+                    class="btn btn-primary">Search</button></div>
+        </div><br>
+      
+            <br>
+            <div class="row" style="width:100%" id="contentPanel">
+            </div>
+    </div>
+</body>
+<script>
+    const renterid = sessionStorage.getItem("renterid");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+
+                    resolve(this.responseText);
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+    function SearchDetails() {
+        document.getElementById("contentPanel").innerHTML = "";
+        const search = document.getElementById("search").value;
+        const getUsersPromise = performAjax("GET", `http://localhost:1234/Renter/searchLocations?search=${search}`);
+        getUsersPromise
+            .then((List) => {
+                loadData(List);
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+
+    function loadData(records) {
+        const data = JSON.parse(records);
+        if (data.length > 0) {
+            let myCol = '';
+            let myPanel = '';
+            data.map(text => {
+                myCol = $('<div class="col-sm-5 col-md-3 pb-2"></div>');
+                myPanel = $(`<div class="card  border-primary card-outline-info" id="'+i+'Panel">
+                                    <div class="card-block">
+                                          <div class="card-title"><span><img src="${text.image}" height="100px" width="130px"></span><br><br><br>
+                                                 <p>`+ text.typeOfHouse + `<br>` + text.houseNo + `<br>` + text.amount + `<br>` + text.location + `</p>
+                                                <button class="btn btn-light"  style="color:blue"   onclick="BuyNow('${text._id}','${text.owner}','${text.houseNo}','${text.roomType}','${text.amount}','${text.address}','${text.email}')">Buy Now</button>
+                                    
+                                         </div>
+                                    </div>
+                            </div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`);
+                myPanel.appendTo(myCol);
+                myCol.appendTo('#contentPanel');
+            })
+        }       
+        else {
+            let myCol = '';
+            myCol = $('<div>propertys not available in this location</div>');
+            myCol.appendTo('#contentPanel');
+        }
+        $('.close').on('click', function (e) {
+            e.stopPropagation();
+            var $target = $(this).parents('.col-sm-3');
+            $target.hide('slow', function () { $target.remove(); });
+        });
+
+    };
+
+    function BuyNow(propertyid, owner, houseNo, roomType, amount, address, email) {
+        event.preventDefault();
+        sessionStorage.setItem("propertyid", propertyid);
+        sessionStorage.setItem("owner", owner);
+        sessionStorage.setItem("houseNo", houseNo);
+        sessionStorage.setItem("roomType", roomType);
+        sessionStorage.setItem("amount", amount);
+        sessionStorage.setItem("address", address);
+        sessionStorage.setItem("emailid", email);
+        window.location.href = "payments";
+    }
+</script>
+
+</html>

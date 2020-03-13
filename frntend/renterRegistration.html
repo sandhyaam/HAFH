@@ -1,0 +1,118 @@
+<html>
+
+<head>
+    <title>Home Away From Home</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  
+
+</head>
+<body class="container">
+    <div style="text-align: center;color: #34495E"><h3>RENTER REGISTRATION</h3></div><br>
+    <input type="hidden" name="id" id="id" class="form-control" required>
+        <div class="row">
+                <div class="col-sm-3"></div>
+                <div class="col-sm-2"><label>FirstName:</label></div>
+                <div class="col-sm-3"><input type="text" id="firstName"placeholder=" firstname" class="form-control"></div>
+                <div class="col-sm-4"></div>
+            </div><br>
+            <div class="row">
+                    <div class="col-sm-3"></div>
+                    <div class="col-sm-2"><label>LastName:</label></div>
+                    <div class="col-sm-3"><input type="text" id="lastName"placeholder="lastname" class="form-control"></div>
+                    <div class="col-sm-4"></div>
+                </div><br>
+            <div class="row">
+                    <div class="col-sm-3"></div>
+                    <div class="col-sm-2"><label>UserName:</label></div>
+                    <div class="col-sm-3"><input type="text" id="userName" placeholder=" username" class="form-control"></div>
+                    <div class="col-sm-4"></div>
+                </div><br>
+            <div class="row">
+                <div class="col-sm-3"></div>
+                <div class="col-sm-2"><label>MobileNo: </label></div>
+                <div class="col-sm-3"><input type="number" id="phoneNo" placeholder=" mobile number" class="form-control" ></div>
+                <div class="col-sm-4"></div>
+            </div><br>
+            <div class="row">
+                    <div class="col-sm-3"></div>
+                    <div class="col-sm-2"><label>EmailId:</label></div>
+                    <div class="col-sm-3"><input type="text" id="email" placeholder=" email" class="form-control" ></div>
+                    <div class="col-sm-4"></div>
+                </div><br>
+            <div class="row">
+                <div class="col-sm-3"></div>
+                <div class="col-sm-2"><label>Address:</label></div>
+                <div class="col-sm-3"><textarea name="message" id="address" placeholder="address" class="form-control" ></textarea></div>
+                <div class="col-sm-4"></div>
+            </div><br>
+            <div class="row">
+                    <div class="col-sm-5"></div>
+                    <div class="col-sm-1"><input type="button" id="btnadd" onclick="RenterRegistration()"
+                            class="btn btn-success" value="Add" /></div>&nbsp;
+                    <div class="col-sm-1"><button type="button" id="cancel" onclick="cancel()"
+                            class="btn btn-success">Reset</button></div>
+                    <div class="col-sm-5"></div>
+                </div>
+</body>
+<script>
+        function performAjax(httpMethod, url, params) {
+            const myPromise = new Promise((resolve, reject) => {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+    
+                        resolve(this.responseText);
+                    }
+                    if (this.status == 500) {
+                        reject({ error: true, message: "ServerError" });
+                    }
+                    if (this.status == 404) {
+                        reject({ error: true, message: "Resource not found" });
+                    }
+                };
+                xhttp.open(httpMethod, url, true);
+                xhttp.setRequestHeader("Content-Type", "application/json");
+                params ? xhttp.send(params) : xhttp.send();
+            });
+            return myPromise;
+        }
+        function RenterRegistration() {
+            const id = document.getElementById("id").value;
+            const firstName = document.getElementById("firstName").value;
+            const lastName = document.getElementById("lastName").value;
+            const userName = document.getElementById("userName").value;
+            const password = Math.floor((Math.random() * 1000) + 1);
+            const phoneNo = document.getElementById("phoneNo").value;
+            const email = document.getElementById("email").value;
+            const address = document.getElementById("address").value;
+            const status = '0';
+            const addPromise = performAjax(
+                "POST", "http://localhost:1234/Renter/renterRegistration",
+                JSON.stringify({ firstName, lastName, userName, password, phoneNo, email, address, status })
+            );
+            addPromise
+                .then(newList => {
+                    alert("Registration Succefully");
+                    cancel();
+                })
+                .catch(err => {
+                    alert(err.message);
+                });
+    
+        }
+    
+        function cancel() {
+            event.preventDefault();
+            document.getElementById("firstName").value = "";
+            document.getElementById("lastName").value = "";
+            document.getElementById("userName").value = "";
+            document.getElementById("phoneNo").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("address").value = "";
+        }
+    </script>
+    
+</html>

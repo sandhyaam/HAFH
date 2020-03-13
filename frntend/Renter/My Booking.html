@@ -1,0 +1,118 @@
+<html>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    .tablecss {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .tablecss td,
+    .tablecss th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+
+    .tablecss tr:nth-child(odd) {
+        background-color: #f2f2f2;
+    }
+
+    .tablecss tr:hover {
+        background-color: #ddd;
+    }
+
+    .tablecss th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: center;
+        background-color: lavender;
+        color: black;
+        font-weight: bold;
+    }
+
+    .button2 {
+        background-color: white;
+        color: black;
+        border: 2px solid #008CBA;
+    }
+
+    .button2:hover {
+        background-color: #008CBA;
+        color: white;
+    }
+</style>
+
+<body onload="loadData()">
+    <center>
+        <table id="table" class="tablecss" style="width:95%;"></table>
+    </center>
+    <input type="hidden" name="id" id="id" class="form-control" required>
+</body>
+
+<script>
+    const renterid = sessionStorage.getItem("renterid");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    resolve(this.responseText);
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+
+    function loadData() {
+        const getPromise = performAjax("GET", `http://localhost:1234/Renter/bookingHistory?renter=${renterid}`);
+        getPromise
+            .then((propertyList) => {
+                loadbookingData(propertyList);
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+
+    function loadbookingData(records) {
+        const bookings = JSON.parse(records);
+        const tableHeader = `<tr><th style="text-align:center">Sno</th><th style="height:20%;text-align:center">Owner</th><th style="height:20%;text-align:center">Property Name</th><th style="height:20%;text-align:center">Renter</th><th style="height:20%;text-align:center">HouseNo</th><th style="height:20%;text-align:center">RoomType</th><th style="height:20%;text-align:center">Amount</th><th style="height:20%;text-align:center">histiort</th></tr>`;
+        let tableRows = bookings.map((booking, index) => {
+            let editButton = `<button id="" class="button button2"   onclick="paymentHistory('${booking.propertyid}')"   data-target="paymentamount">Payment History</button>`;
+            let FeedBack = `<button id="" class="button button2"  onclick="feedback('${booking.propertyid}','${booking.ownerid}')"   data-target="paymentamount">FeedBack</button>`;
+            return `<tr><td>${index + 1}</td><td>${booking.owner}</td><td>${booking.property}</td><td>${booking.renter}</td><td>${booking.houseNo}</td><td>${booking.roomType}</td><td>${booking.amount}</td><td align="center">${editButton}&nbsp;&nbsp${FeedBack}</td></tr>`;
+        });
+
+        document.getElementById("table").innerHTML = `<table  border="2"> ${tableHeader}${tableRows.join('')}</table>`;
+    }
+
+    function paymentHistory(property) {
+        event.preventDefault();
+        sessionStorage.setItem("property", property);
+        window.location.href = "paymentamount";
+    }
+
+    function feedback(property,owner) {
+        event.preventDefault();
+        sessionStorage.setItem("property", property);
+        sessionStorage.setItem("owner", owner);
+
+        window.location.href = "feedback";
+    }
+
+
+</script>
+
+</html>

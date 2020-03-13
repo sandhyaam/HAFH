@@ -1,0 +1,94 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <title>payments page</title>
+    <style>
+        .tablecss {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .tablecss td,
+        .tablecss th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .tablecss tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+
+        .tablecss tr:hover {
+            background-color: #ddd;
+        }
+
+        .tablecss th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: center;
+            background-color: lavender;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+
+<body onload="paymentHistory()">
+    <center>
+        <table id="table" class="tablecss" style="width:95%;"></table>
+    </center>
+    <input type="hidden" id="id">
+</body>
+<script>
+    const renterid = sessionStorage.getItem("renterid");
+    const propertyid = sessionStorage.getItem("property");
+    function performAjax(httpMethod, url, params) {
+        const myPromise = new Promise((resolve, reject) => {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+
+                    resolve(this.responseText);
+                }
+                if (this.status == 500) {
+                    reject({ error: true, message: "ServerError" });
+                }
+                if (this.status == 404) {
+                    reject({ error: true, message: "Resource not found" });
+                }
+            };
+            xhttp.open(httpMethod, url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            params ? xhttp.send(params) : xhttp.send();
+        });
+        return myPromise;
+    }
+
+    function paymentHistory() {
+        const getPromise = performAjax("GET", `http://localhost:1234/Renter/getPaymentData?renter=${renterid}&propertyid=${propertyid}`);
+        getPromise
+            .then((paymentList) => {
+                loadbookingData(paymentList);
+            })
+            .catch(err => {
+                alert(err.message);
+            })
+    }
+    function loadbookingData(records) {
+        const payments = JSON.parse(records);
+        const tableHeader = `<tr><th style="text-align:center">Sno</th><th style="height:20%;text-align:center">Property</th><th style="height:20%;text-align:center">Renter</th><th style="height:20%;text-align:center">Amount</th><th style="height:20%;text-align:center">address</th><th style="height:20%;text-align:center">cardtype</th><th style="height:20%;text-align:center">cardHolderName</th><th style="height:20%;text-align:center">cardNo</th><th>cvv</th><th style="height:20%;text-align:center">date</th><th style="height:20%;text-align:center">Month</th></tr>`;
+        let tableRows = payments.map((payment, index) => {
+            return `<tr><td>${index + 1}</td><td>${payment.property}</td><td>${payment.renter}</td><td>${payment.amount}</td><td>${payment.address}</td><td>${payment.cardtype}</td><td>${payment.cardHolderName}</td><td>${payment.cardNo}</td><td>${payment.cvv}</td><td>${payment.date}</td><td>${payment.month}</td></tr>`;
+        });
+
+        document.getElementById("table").innerHTML = `<table  border="2"> ${tableHeader}${tableRows.join('')}</table>`;
+    }
+
+</script>
+</head>
+
+</html>
